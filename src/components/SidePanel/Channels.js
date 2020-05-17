@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Menu, Icon, Modal, Form, Input, Button } from "semantic-ui-react";
 import firebase from "../../firebase";
-import { setCurrentChannel } from "../../actions";
+import { setCurrentChannel, setPrivateChannel } from "../../actions";
 import { connect } from "react-redux";
 
-const Channels = ({ currentUser, setCurrentChannel }) => {
+const Channels = ({ currentUser, setCurrentChannel, setPrivateChannel }) => {
   const [chatChannels, setChatChannels] = useState([]);
   const [activeChannel, setactiveChannel] = useState("");
   const [channelsRef] = useState(firebase.database().ref("channels"));
@@ -26,6 +26,7 @@ const Channels = ({ currentUser, setCurrentChannel }) => {
   const changeChannel = (channel) => {
     setactiveChannel(channel.id);
     setCurrentChannel(channel);
+    setPrivateChannel(false);
   };
   const closeModal = () => {
     setModal(false);
@@ -132,4 +133,9 @@ const Channels = ({ currentUser, setCurrentChannel }) => {
   );
 };
 
-export default connect(null, { setCurrentChannel })(Channels);
+const mapStateToProps = () => ({});
+
+export default connect(mapStateToProps, {
+  setCurrentChannel,
+  setPrivateChannel,
+})(Channels);

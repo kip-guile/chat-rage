@@ -26,8 +26,6 @@ const DirectMessages = ({
           loadedUsers.push(user);
           setUsers(loadedUsers);
           addUsers(loadedUsers);
-          console.log("loaded", loadedUsers);
-          console.log("regular", users);
         }
       });
       connectedRef.on("value", (snap) => {

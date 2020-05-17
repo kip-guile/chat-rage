@@ -32,8 +32,11 @@ const Messages = ({ channel, currentUser, messagesRedux, addMessage }) => {
     };
     const addMessageListener = (channelId) => {
       let loadedMessages = [];
-      messagesRef.child(channelId).on("child_added", (snap) => {
-        loadedMessages.push(snap.val());
+      messagesRef.child(channelId).on("value", (snap) => {
+        const object = snap.val();
+        for (const property in object) {
+          loadedMessages.push(object[property]);
+        }
         setMessages(loadedMessages);
         addMessage(loadedMessages);
         setMessagesLoading(false);
