@@ -7,8 +7,17 @@ import MessageComponent from "./Message";
 import firebase from "../../firebase";
 import { addMessage } from "../../actions";
 
-const Messages = ({ channel, currentUser, messagesRedux, addMessage }) => {
+const Messages = ({
+  channel,
+  currentUser,
+  messagesRedux,
+  addMessage,
+  isPrivateChannel,
+}) => {
   const [messages, setMessages] = useState([]);
+  const [privateMessagesRef] = useState(
+    firebase.database().ref("privateMessages")
+  );
   const [searchResults, setSearchResults] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,6 +28,10 @@ const Messages = ({ channel, currentUser, messagesRedux, addMessage }) => {
     const addListeners = (channelId) => {
       addMessageListener(channelId);
     };
+    const getMessagesRef = () => {
+      return isPrivateChannel ? privateMessagesRef : messagesRef;
+    };
+    const ref = getMessagesRef();
     const countUniqueUsers = (messages) => {
       const uniqueUsers = messages.reduce((acc, message) => {
         if (!acc.includes(message.user.name)) {
@@ -32,7 +45,7 @@ const Messages = ({ channel, currentUser, messagesRedux, addMessage }) => {
     };
     const addMessageListener = (channelId) => {
       let loadedMessages = [];
-      messagesRef.child(channelId).on("value", (snap) => {
+      ref.child(channelId).on("value", (snap) => {
         const object = snap.val();
         for (const property in object) {
           loadedMessages.push(object[property]);
@@ -57,7 +70,9 @@ const Messages = ({ channel, currentUser, messagesRedux, addMessage }) => {
         user={currentUser}
       />
     ));
-  const displayChannelName = (channel) => (channel ? `#${channel.name}` : "");
+  const displayChannelName = (channel) => {
+    return channel ? `${isPrivateChannel ? "@" : "#"}${channel.name}` : "";
+  };
   const handleSearchMessages = () => {
     const channelMessages = [...messagesRedux];
     const regex = new RegExp(searchTerm, "gi");
@@ -78,6 +93,9 @@ const Messages = ({ channel, currentUser, messagesRedux, addMessage }) => {
     setSearchLoading(true);
     handleSearchMessages();
   };
+  const getMessagesRef = () => {
+    return isPrivateChannel ? privateMessagesRef : messagesRef;
+  };
 
   return (
     <React.Fragment>
@@ -86,6 +104,7 @@ const Messages = ({ channel, currentUser, messagesRedux, addMessage }) => {
         uniqueUsers={uniqueUsers}
         handleSearchChange={handleSearchChange}
         searchLoading={searchLoading}
+        isPrivateChannel={isPrivateChannel}
       />
       <Segment>
         <Comment.Group className="messages">
@@ -98,6 +117,8 @@ const Messages = ({ channel, currentUser, messagesRedux, addMessage }) => {
         currentUser={currentUser}
         channel={channel}
         messagesRef={messagesRef}
+        isPrivateChannel={isPrivateChannel}
+        getMessagesRef={getMessagesRef}
       />
     </React.Fragment>
   );

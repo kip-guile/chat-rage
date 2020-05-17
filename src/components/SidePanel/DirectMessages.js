@@ -12,6 +12,7 @@ const DirectMessages = ({
   setPrivateChannel,
 }) => {
   const [users, setUsers] = useState([]);
+  const [activeChannel, setActiveChannel] = useState("");
   const [usersRef] = useState(firebase.database().ref("users"));
   const [connectedRef] = useState(firebase.database().ref(".info/connected"));
   const [presenceRef] = useState(firebase.database().ref("presence"));
@@ -67,6 +68,9 @@ const DirectMessages = ({
       ? `${userId}/${currentUserId}`
       : `${currentUserId}/${userId}`;
   };
+  const setActiveChannelFxn = (userId) => {
+    setActiveChannel(userId);
+  };
   const changeChannel = (user) => {
     const channelId = getChannelId(user.uid);
     const channelData = {
@@ -75,7 +79,9 @@ const DirectMessages = ({
     };
     setCurrentChannel(channelData);
     setPrivateChannel(true);
+    setActiveChannelFxn(user.uid);
   };
+
   return (
     <Menu.Menu className="menu">
       <Menu.Item>
@@ -87,6 +93,7 @@ const DirectMessages = ({
       {usersRedux.map((user) => (
         <Menu.Item
           key={user.uid}
+          active={user.uid === activeChannel}
           onClick={() => changeChannel(user)}
           style={{ opacity: 0.7, fonStyle: "italic" }}
         >
