@@ -7,6 +7,7 @@ import MessageComponent from "./Message";
 import firebase from "../../firebase";
 import { addMessage, setIsChannelStarred, setUserPosts } from "../../actions";
 import Typing from "./Typing";
+import Skeleton from "./Skeleton";
 
 function useEffectSkipFirst(fn, arr) {
   const isFirst = useRef(true);
@@ -29,6 +30,7 @@ const Messages = ({
   isPrivateChannel,
   setUserPosts,
 }) => {
+  const messagesEnd = useRef(true);
   const [messages, setMessages] = useState([]);
   const [privateMessagesRef] = useState(
     firebase.database().ref("privateMessages")
@@ -44,11 +46,32 @@ const Messages = ({
   const [messagesRef] = useState(firebase.database().ref("messages"));
   const [typingRef] = useState(firebase.database().ref("typing"));
   const [connectedRef] = useState(firebase.database().ref(".info/connected"));
+  const [listeners, setListners] = useState([]);
+
+  useEffect(() => {
+    const scrollToBottom = () => {
+      messagesEnd.current.scrollIntoView({ behavior: "smooth" });
+    };
+    if (messagesEnd) {
+      scrollToBottom();
+    }
+  }, [messages.length, typingUsers.length]);
 
   useEffectSkipFirst(() => {
     starChannel();
   }, [isChannelStarred]);
   useEffect(() => {
+    const addToListeners = (id, ref, event) => {
+      const index = listeners.findIndex((listener) => {
+        return (
+          listener.id === id && listener.ref === ref && listener.event === event
+        );
+      });
+      if (index === -1) {
+        const newListener = { id, ref, event };
+        setListners(listeners.concat(newListener));
+      }
+    };
     const addListeners = (channelId) => {
       addMessageListener(channelId);
       addTypingListeners(channelId);
@@ -64,6 +87,7 @@ const Messages = ({
           setTypingUsers(typingUsersArr);
         }
       });
+      addToListeners(channelId, typingRef, "child_added");
       typingRef.child(channelId).on("child_removed", (snap) => {
         const index = typingUsersArr.findIndex((user) => user.id === snap.key);
         if (index !== -1) {
@@ -73,6 +97,7 @@ const Messages = ({
           setTypingUsers(typingUsersArr);
         }
       });
+      addToListeners(channelId, typingRef, "child_removed");
       connectedRef.on("value", (snap) => {
         if (snap.val() === true) {
           typingRef
@@ -143,11 +168,22 @@ const Messages = ({
         countUniqueUsers(loadedMessages);
         countUserPosts(loadedMessages);
       });
+      addToListeners(channelId, ref, "child_added");
+    };
+    const removeListeners = (listeners) => {
+      return listeners.forEach((listener) => {
+        listener.ref.child(listener.id).off(listener.event);
+      });
     };
     if (channel && currentUser) {
+      removeListeners(listeners);
       addListeners(channel.id);
       addUsersStarsListener(channel.id, currentUser.uid);
     }
+    // return function cleanup() {
+    //   removeListeners(listeners);
+    //   connectedRef.off();
+    // };
   }, [messages.length, messagesRedux.length, typingUsers.length]);
 
   const displayMessages = (messagesarr) =>
@@ -221,6 +257,14 @@ const Messages = ({
         <span className="user__typing">{user.name} is typing</span> <Typing />
       </div>
     ));
+  const displayMessageSkeleton = (loading) =>
+    loading ? (
+      <React.Fragment>
+        {[...Array(10)].map((_, i) => (
+          <Skeleton key={i} />
+        ))}
+      </React.Fragment>
+    ) : null;
   return (
     <React.Fragment>
       <MessagesHeader
@@ -234,10 +278,12 @@ const Messages = ({
       />
       <Segment>
         <Comment.Group className="messages">
+          {displayMessageSkeleton(messagesLoading)}
           {searchTerm
             ? displayMessages(searchResults)
             : displayMessages(messagesRedux)}
           {displayTypingUsers(typingUsers)}
+          <div ref={messagesEnd} />
         </Comment.Group>
       </Segment>
       <MessagesForm

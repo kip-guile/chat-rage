@@ -76,6 +76,15 @@ const Channels = ({
       setChannel(loadedChannels[0]);
       addNotificationListener(snap.key);
     });
+    // const removeListeners = () => {
+    //   channelsRef.off();
+    //   // chatChannels.forEach((channel) => {
+    //   //   messagesRef.child(channel.id).off();
+    //   // });
+    // };
+    // return function cleanup() {
+    //   removeListeners();
+    // };
   }, [
     channelsRef,
     channelArrayLength,

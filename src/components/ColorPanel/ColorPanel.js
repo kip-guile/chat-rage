@@ -31,6 +31,12 @@ const ColorPanel = ({ currentUser, setColors }) => {
       };
       addListener(currentUser.uid);
     }
+    // const removeListener = () => {
+    //   usersRef.child(`${currentUser.uid}/colors`).off();
+    // };
+    // return function cleanup() {
+    //   removeListener();
+    // };
   }, [userColors.length]);
   const openModal = () => setModal(true);
   const closeModal = () => setModal(false);

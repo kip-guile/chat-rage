@@ -61,6 +61,14 @@ const DirectMessages = ({
         addStatusToUser(snap.key, false);
       }
     });
+    // const removeListeners = () => {
+    //   usersRef.off();
+    //   presenceRef.off();
+    //   connectedRef.off();
+    // };
+    // return function cleanup() {
+    //   removeListeners();
+    // };
   }, [users.length, usersRedux.length]);
   const isUserOnline = (user) => user.status === "online";
   const getChannelId = (userId) => {
