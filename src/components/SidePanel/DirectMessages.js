@@ -49,6 +49,7 @@ const DirectMessages = ({
         return acc.concat(user);
       }, []);
       setUsers(updatedUsers);
+      addUsers(updatedUsers);
     };
     presenceRef.on("child_added", (snap) => {
       if (currentUser.uid !== snap.key) {

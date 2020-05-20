@@ -18,6 +18,7 @@ const MessagesForm = ({
   const [modal, setModal] = useState(false);
   const [uploadState, setUploadState] = useState("");
   const [storageRef] = useState(firebase.storage().ref());
+  const [typingRef] = useState(firebase.database().ref("typing"));
   const [percentUploaded, setPercentUploaded] = useState(0);
   const handleChange = (e) => {
     setMessage({ [e.target.name]: e.target.value });
@@ -55,6 +56,7 @@ const MessagesForm = ({
           setLoading(false);
           setMessage({ message: "" });
           setErrors([]);
+          typingRef.child(channel.id).child(currentUser.uid).remove();
         })
         .catch((err) => {
           console.error(err);
@@ -91,7 +93,6 @@ const MessagesForm = ({
     const pathToUpload = channel.id;
     const ref = getMessagesRef();
     const filePath = `${getPath()}/${uuid()}.jpg`;
-    console.log(filePath);
     setUploadState("uploading");
     let uploadTask = storageRef.child(filePath).put(file, metadata);
     const run = () => {
@@ -126,11 +127,23 @@ const MessagesForm = ({
     };
     run();
   };
+  const handleKeyDown = () => {
+    const { message } = messageObj;
+    if (message) {
+      typingRef
+        .child(channel.id)
+        .child(currentUser.uid)
+        .set(currentUser.displayName);
+    } else {
+      typingRef.child(channel.id).child(currentUser.uid).remove();
+    }
+  };
   return (
     <Segment className="message__form">
       <Input
         fluid
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         value={messageObj.message}
         name="message"
         style={{ marginBottom: "0.7em" }}
